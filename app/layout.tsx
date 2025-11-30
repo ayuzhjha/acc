@@ -32,7 +32,10 @@ export const metadata: Metadata = {
     title: "ACM Weekly Coding Challenge",
     description: "Solve. Submit. Climb the leaderboard.",
   },
-  generator: 'v0.app'
+  generator: 'v0.app',
+  icons: {
+    icon: '/intrologo.png',
+  },
 }
 
 export const viewport: Viewport = {
