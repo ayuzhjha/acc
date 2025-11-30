@@ -14,11 +14,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Loader2, Plus, Edit, Trash, Shield, Save } from 'lucide-react';
+import { Badge } from "@/components/ui/badge"
 import { Checkbox } from '@/components/ui/checkbox';
 
 import { useAuth } from "@/context/AuthContext"
 
-export default function AdminPage() {
+import { API_URL } from "@/lib/api"
+
+export default function AdminDashboard() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -75,9 +78,9 @@ export default function AdminPage() {
     try {
       setLoading(true);
       const [usersRes, challengesRes, badgesRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users`, { headers: { 'x-auth-token': authToken } }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/challenges`),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/badges`, { headers: { 'x-auth-token': authToken } })
+        fetch(`${API_URL}/api/admin/users`, { headers: { 'x-auth-token': authToken } }),
+        fetch(`${API_URL}/api/challenges`),
+        fetch(`${API_URL}/api/admin/badges`, { headers: { 'x-auth-token': authToken } })
       ]);
 
       if (usersRes.ok) setUsers(await usersRes.json());
@@ -93,7 +96,7 @@ export default function AdminPage() {
 
   const handleCreateChallenge = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/admin/challenge`, {
+      const res = await fetch(`${API_URL}/api/admin/challenge`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -124,7 +127,7 @@ export default function AdminPage() {
   const handleUpdateChallenge = async () => {
     if (!editingChallenge) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/admin/challenge/${editingChallenge._id}`, {
+      const res = await fetch(`${API_URL}/api/admin/challenge/${editingChallenge._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -148,7 +151,7 @@ export default function AdminPage() {
   const handleDeleteChallenge = async (id: string) => {
     if (!confirm('Are you sure you want to delete this challenge?')) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/admin/challenge/${id}`, {
+      const res = await fetch(`${API_URL}/api/admin/challenge/${id}`, {
         method: 'DELETE',
         headers: { 'x-auth-token': token }
       });
@@ -173,7 +176,7 @@ export default function AdminPage() {
   const handleSaveUser = async () => {
     if (!editingUser) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/admin/user/points`, {
+      const res = await fetch(`${API_URL}/api/admin/user/points`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

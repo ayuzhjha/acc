@@ -12,6 +12,8 @@ import { HomeBackground } from '@/components/home-background';
 
 import { useAuth } from "@/context/AuthContext"
 
+import { API_URL } from "@/lib/api"
+
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
@@ -32,8 +34,10 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
 
+    console.log("Attempting login to:", `${API_URL}/api/auth/login`);
+
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/auth/login`, {
+      const res = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

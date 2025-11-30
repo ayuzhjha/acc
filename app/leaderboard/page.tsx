@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils"
 import { useAuth } from "@/context/AuthContext"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { API_URL } from "@/lib/api"
 
 const rankIcons = {
   1: Crown,
@@ -33,7 +34,7 @@ export default function LeaderboardPage() {
 
   const fetchLeaderboard = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/leaderboard`);
+      const res = await fetch(`${API_URL}/api/leaderboard`);
       if (res.ok) {
         const data = await res.json();
         // Add rank to data

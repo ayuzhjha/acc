@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge"
 import { ArrowRight, Code2, Trophy, Users, Calendar, Star, CheckCircle2, ExternalLink, Lock } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
 
+import { API_URL } from "@/lib/api"
+
 export default function Home() {
   const [challenges, setChallenges] = useState<any[]>([]);
   const [latestChallenge, setLatestChallenge] = useState<any>(null);
@@ -19,7 +21,7 @@ export default function Home() {
   useEffect(() => {
     const fetchChallenges = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/challenges`);
+        const res = await fetch(`${API_URL}/api/challenges`);
         const data = await res.json();
         setChallenges(data);
 

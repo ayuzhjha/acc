@@ -11,9 +11,12 @@ import { Calendar, CheckCircle2, Circle, Clock, ArrowRight, ExternalLink, FileTe
 import Link from "next/link"
 import { useAuth } from "@/context/AuthContext"
 
+import { API_URL } from "@/lib/api"
+
 export default function ChallengesPage() {
   const [challenges, setChallenges] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('all');
   const { user } = useAuth();
 
   useEffect(() => {
@@ -22,7 +25,7 @@ export default function ChallengesPage() {
 
   const fetchChallenges = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/challenges`);
+      const res = await fetch(`${API_URL}/api/challenges`);
       if (res.ok) {
         const data = await res.json();
         setChallenges(data);

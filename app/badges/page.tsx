@@ -12,6 +12,8 @@ import { useAuth } from "@/context/AuthContext"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
+import { API_URL } from "@/lib/api"
+
 export default function BadgesPage() {
   const [allBadges, setAllBadges] = useState<any[]>([]);
   const [userBadges, setUserBadges] = useState<any[]>([]);
@@ -25,8 +27,8 @@ export default function BadgesPage() {
   const fetchData = async (userId: string | null) => {
     try {
       const [badgesRes, userRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/badges`),
-        userId ? fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/user/${userId}`) : Promise.resolve(null)
+        fetch(`${API_URL}/api/badges`),
+        userId ? fetch(`${API_URL}/api/user/${userId}`) : Promise.resolve(null)
       ]);
 
       if (badgesRes.ok) {

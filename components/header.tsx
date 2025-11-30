@@ -25,6 +25,7 @@ const navigation = [
 ]
 
 import { useAuth } from "@/context/AuthContext"
+import { API_URL } from "@/lib/api"
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false)
@@ -35,7 +36,7 @@ export function Header() {
   useEffect(() => {
     if (isProfileOpen && user?._id) {
       // Fetch fresh user data to get badges
-      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/user/${user._id}`)
+      fetch(`${API_URL}/api/user/${user._id}`)
         .then(res => res.json())
         .then(currentUser => {
           if (currentUser && currentUser.badges) {
