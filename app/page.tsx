@@ -42,12 +42,60 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col relative">
+
       <Header />
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative py-20 md:py-32 overflow-hidden">
+        <section className="relative py-20 md:py-32 overflow-hidden" style={{ backgroundColor: "#0f0f23" }}>
+          {/* Warm Amber Background */}
+          <div
+            className="absolute inset-0 z-0 pointer-events-none"
+            style={{
+              backgroundImage: `
+                radial-gradient(circle at 50% 50%, 
+                  rgba(245, 158, 11, 0.14) 0%, 
+                  rgba(245, 158, 11, 0.08) 25%, 
+                  rgba(245, 158, 11, 0.03) 35%, 
+                  transparent 50%
+                )
+              `,
+              backgroundSize: "100% 100%",
+            }}
+          />
+
+          {/* Diagonal Fade Grid Background - Top Left */}
+          <div
+            className="absolute top-0 left-0 z-0 pointer-events-none w-full md:w-[600px] h-[600px]"
+            style={{
+              backgroundImage: `
+                linear-gradient(to right, #d1d5db 1px, transparent 1px),
+                linear-gradient(to bottom, #d1d5db 1px, transparent 1px)
+              `,
+              backgroundSize: "32px 32px",
+              WebkitMaskImage:
+                "radial-gradient(ellipse 80% 80% at 0% 0%, #000 50%, transparent 90%)",
+              maskImage:
+                "radial-gradient(ellipse 80% 80% at 0% 0%, #000 50%, transparent 90%)",
+            }}
+          />
+
+          {/* Diagonal Fade Grid Background - Top Right */}
+          <div
+            className="absolute top-0 right-0 z-0 pointer-events-none w-full md:w-[600px] h-[600px]"
+            style={{
+              backgroundImage: `
+                linear-gradient(to right, #d1d5db 1px, transparent 1px),
+                linear-gradient(to bottom, #d1d5db 1px, transparent 1px)
+              `,
+              backgroundSize: "32px 32px",
+              WebkitMaskImage:
+                "radial-gradient(ellipse 80% 80% at 100% 0%, #000 50%, transparent 90%)",
+              maskImage:
+                "radial-gradient(ellipse 80% 80% at 100% 0%, #000 50%, transparent 90%)",
+            }}
+          />
           <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:50px_50px]" />
           <div className="absolute inset-0 flex items-center justify-center bg-background [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]" />
 
