@@ -176,7 +176,7 @@ export default function AdminDashboard() {
   const handleSaveUser = async () => {
     if (!editingUser) return;
     try {
-      const res = await fetch(`${API_URL}/api/admin/user/points`, {
+      const res = await fetch(`${API_URL}/api/admin/user/${editingUser._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -197,6 +197,25 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       toast.error('Error updating user');
+    }
+  };
+
+  const handleDeleteUser = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
+    try {
+      const res = await fetch(`${API_URL}/api/admin/user/${id}`, {
+        method: 'DELETE',
+        headers: { 'x-auth-token': token }
+      });
+
+      if (res.ok) {
+        toast.success('User deleted');
+        fetchData(token);
+      } else {
+        toast.error('Failed to delete user');
+      }
+    } catch (error) {
+      toast.error('Error deleting user');
     }
   };
 
@@ -396,42 +415,47 @@ export default function AdminDashboard() {
                       <TableCell>{user.points}</TableCell>
                       <TableCell>{user.badges?.length || 0}</TableCell>
                       <TableCell>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="ghost" size="sm" onClick={() => handleEditUser(user)}>
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Edit User: {user.name}</DialogTitle>
-                            </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                              <div className="grid gap-2">
-                                <Label>Points</Label>
-                                <Input type="number" value={editPoints} onChange={e => setEditPoints(Number(e.target.value))} />
-                              </div>
-                              <div className="grid gap-2">
-                                <Label>Badges</Label>
-                                <div className="grid grid-cols-2 gap-2 border p-2 rounded-md max-h-40 overflow-y-auto">
-                                  {badges.map((badge: any) => (
-                                    <div key={badge._id} className="flex items-center space-x-2">
-                                      <Checkbox
-                                        id={`badge-${badge._id}`}
-                                        checked={selectedBadges.includes(badge._id)}
-                                        onCheckedChange={() => toggleBadge(badge._id)}
-                                      />
-                                      <label htmlFor={`badge-${badge._id}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                        {badge.name}
-                                      </label>
-                                    </div>
-                                  ))}
+                        <div className="flex gap-2">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="ghost" size="sm" onClick={() => handleEditUser(user)}>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Edit User: {user.name}</DialogTitle>
+                              </DialogHeader>
+                              <div className="grid gap-4 py-4">
+                                <div className="grid gap-2">
+                                  <Label>Points</Label>
+                                  <Input type="number" value={editPoints} onChange={e => setEditPoints(Number(e.target.value))} />
                                 </div>
+                                <div className="grid gap-2">
+                                  <Label>Badges</Label>
+                                  <div className="grid grid-cols-2 gap-2 border p-2 rounded-md max-h-40 overflow-y-auto">
+                                    {badges.map((badge: any) => (
+                                      <div key={badge._id} className="flex items-center space-x-2">
+                                        <Checkbox
+                                          id={`badge-${badge._id}`}
+                                          checked={selectedBadges.includes(badge._id)}
+                                          onCheckedChange={() => toggleBadge(badge._id)}
+                                        />
+                                        <label htmlFor={`badge-${badge._id}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                          {badge.name}
+                                        </label>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                                <Button onClick={handleSaveUser}>Save Changes</Button>
                               </div>
-                              <Button onClick={handleSaveUser}>Save Changes</Button>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
+                            </DialogContent>
+                          </Dialog>
+                          <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDeleteUser(user._id)}>
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

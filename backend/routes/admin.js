@@ -115,5 +115,17 @@ router.get('/badges', auth, adminCheck, async (req, res) => {
         res.status(500).send('Server Error');
     }
 });
+// @route   DELETE api/admin/user/:id
+// @desc    Delete a user
+// @access  Private/Admin
+router.delete('/user/:id', auth, adminCheck, async (req, res) => {
+    try {
+        await User.findByIdAndDelete(req.params.id);
+        res.json({ message: 'User removed' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
 
 module.exports = router;
