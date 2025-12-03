@@ -348,6 +348,4 @@ export function Header() {
   )
 }
 
-function Settings({ className }: { className?: string }) {
-  return <User className={className} /> // Just a placeholder icon if needed, but we removed the Settings menu item
-}
+
