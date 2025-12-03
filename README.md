@@ -62,7 +62,7 @@ Make sure you have these installed:
 ### **2. Clone the Repository**
 Download the code to your computer:
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/ayuzhjha/acc.git
 cd acm-weekly-coding-challenge-platform
 ```
 
