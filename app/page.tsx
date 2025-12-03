@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { ArrowRight, Code2, Trophy, Users, Calendar, Star, CheckCircle2, ExternalLink, Lock } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
 import Aurora from "@/components/Aurora"
+import BlurText from "@/components/BlurText"
 
 import { API_URL } from "@/lib/api"
 
@@ -115,10 +116,23 @@ export default function Home() {
               Weekly Challenge is Live
             </div>
 
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground mb-6 bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/50">
-              Master Coding.<br />
-              <span className="text-primary">Build Your Legacy.</span>
-            </h1>
+            <div className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground mb-6">
+              <BlurText
+                text="Master Coding."
+                delay={150}
+                animateBy="words"
+                direction="top"
+                className="inline-block mb-2"
+              />
+              <br />
+              <BlurText
+                text="Build Your Legacy."
+                delay={150}
+                animateBy="words"
+                direction="top"
+                className="text-primary inline-block"
+              />
+            </div>
 
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
               Join the ACM Student Chapter's weekly coding challenges. Compete with peers, earn badges, and climb the leaderboard.
