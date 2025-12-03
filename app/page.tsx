@@ -77,7 +77,7 @@ export default function Home() {
 
           {/* Diagonal Fade Grid Background - Top Left */}
           <div
-            className="absolute top-0 left-0 z-0 pointer-events-none w-full md:w-[600px] h-[600px]"
+            className="absolute top-0 left-0 z-0 pointer-events-none w-full md:w-[600px] h-[600px] opacity-20 md:opacity-100"
             style={{
               backgroundImage: `
                 linear-gradient(to right, #d1d5db 1px, transparent 1px),
@@ -93,7 +93,7 @@ export default function Home() {
 
           {/* Diagonal Fade Grid Background - Top Right */}
           <div
-            className="absolute top-0 right-0 z-0 pointer-events-none w-full md:w-[600px] h-[600px]"
+            className="absolute top-0 right-0 z-0 pointer-events-none w-full md:w-[600px] h-[600px] opacity-20 md:opacity-100"
             style={{
               backgroundImage: `
                 linear-gradient(to right, #d1d5db 1px, transparent 1px),
