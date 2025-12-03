@@ -12,9 +12,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
-import { Code2, Trophy, User, LogOut, Menu, Github, Bell, ChevronDown, X } from "lucide-react"
+import { Code2, Trophy, User, LogOut, Menu, Github, Bell, ChevronDown, X, Settings } from "lucide-react"
 import { toast } from "sonner"
 
 const navigation = [
