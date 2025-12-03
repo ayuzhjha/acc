@@ -297,7 +297,7 @@ export function Header() {
           )}
 
           {/* Mobile Menu */}
-          <Sheet open={isOpen} onOpenChange={setIsOpen}>
+          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden">
                 <Menu className="h-5 w-5" />
@@ -312,7 +312,7 @@ export function Header() {
                       href={item.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={() => setIsOpen(false)}
+                      onClick={() => setIsMobileMenuOpen(false)}
                       className="text-lg font-medium text-foreground hover:text-primary transition-colors"
                     >
                       {item.name}
@@ -321,7 +321,7 @@ export function Header() {
                     <Link
                       key={item.name}
                       href={item.href}
-                      onClick={() => setIsOpen(false)}
+                      onClick={() => setIsMobileMenuOpen(false)}
                       className="text-lg font-medium text-foreground hover:text-primary transition-colors"
                     >
                       {item.name}
@@ -329,7 +329,7 @@ export function Header() {
                   )
                 ))}
                 {!user && (
-                  <Link href="/login" onClick={() => setIsOpen(false)}>
+                  <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
                     <Button className="w-full">Login</Button>
                   </Link>
                 )}
