@@ -28,12 +28,14 @@ import { useAuth } from "@/context/AuthContext"
 import { API_URL } from "@/lib/api"
 
 export function Header() {
-  const [isOpen, setIsOpen] = useState(false)
-  const { user, logout } = useAuth()
-  const [isProfileOpen, setIsProfileOpen] = useState(false)
-  const [userBadges, setUserBadges] = useState<any[]>([])
+  const { user, logout } = useAuth();
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [userBadges, setUserBadges] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [profilePicUrl, setProfilePicUrl] = useState('');
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // Renamed from isOpen to avoid conflict
 
   const handleLogout = () => {
     logout();
@@ -42,12 +44,34 @@ export function Header() {
 
   useEffect(() => {
     if (user) {
+      setProfilePicUrl(user.profilePicture || '');
       fetchNotifications();
-      // Poll for notifications every minute
       const interval = setInterval(fetchNotifications, 60000);
       return () => clearInterval(interval);
     }
   }, [user]);
+
+  const handleUpdateProfilePic = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/auth/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': localStorage.getItem('token') || ''
+        },
+        body: JSON.stringify({ profilePicture: profilePicUrl })
+      });
+
+      if (res.ok) {
+        setIsEditingProfile(false);
+        // Ideally update user context here, but for now a reload or re-fetch works
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error("Failed to update profile picture", error);
+      toast.error("Failed to update profile picture.");
+    }
+  };
 
   const fetchNotifications = async () => {
     if (!user) return;
@@ -81,15 +105,15 @@ export function Header() {
 
   useEffect(() => {
     if (isProfileOpen && user?._id) {
-      // Fetch fresh user data to get badges
       fetch(`${API_URL}/api/user/${user._id}`)
         .then(res => res.json())
         .then(currentUser => {
-          if (currentUser && currentUser.badges) {
-            setUserBadges(currentUser.badges);
+          if (currentUser) {
+            if (currentUser.badges) setUserBadges(currentUser.badges);
+            if (currentUser.profilePicture) setProfilePicUrl(currentUser.profilePicture);
           }
         })
-        .catch(err => console.error("Failed to fetch user badges", err));
+        .catch(err => console.error("Failed to fetch user data", err));
     }
   }, [isProfileOpen, user]);
 
@@ -135,12 +159,41 @@ export function Header() {
         {/* Right Section */}
         <div className="flex items-center gap-2">
           {/* Notifications */}
-          <Button variant="ghost" size="icon" className="relative" onClick={() => toast.info("Feature coming soon")}>
-            <Bell className="h-5 w-5" />
-            <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[10px] font-medium flex items-center justify-center text-primary-foreground">
-              3
-            </span>
-          </Button>
+          {user && (
+            <Popover onOpenChange={(open) => { if (open) markAsRead(); }}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <Bell className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[10px] font-medium flex items-center justify-center text-primary-foreground">
+                      {unreadCount}
+                    </span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-0" align="end">
+                <div className="p-4 border-b font-semibold">Notifications</div>
+                <ScrollArea className="h-[300px]">
+                  {notifications.length === 0 ? (
+                    <div className="p-4 text-center text-muted-foreground text-sm">
+                      No notifications
+                    </div>
+                  ) : (
+                    <div className="divide-y">
+                      {notifications.map((notification) => (
+                        <div key={notification._id} className={`p-4 text-sm ${notification.read ? 'bg-background' : 'bg-muted/50'}`}>
+                          <p>{notification.message}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {new Date(notification.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+              </PopoverContent>
+            </Popover>
+          )}
 
           {/* User Menu or Login Button */}
           {user ? (

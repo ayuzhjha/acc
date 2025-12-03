@@ -53,6 +53,9 @@ export default function AdminDashboard() {
   const [editingUser, setEditingUser] = useState<any>(null);
   const [editPoints, setEditPoints] = useState(0);
   const [editStreak, setEditStreak] = useState(0);
+  const [editEmail, setEditEmail] = useState('');
+  const [editPassword, setEditPassword] = useState('');
+  const [editProfilePicture, setEditProfilePicture] = useState('');
   const [selectedBadges, setSelectedBadges] = useState<string[]>([]);
 
   useEffect(() => {
@@ -174,6 +177,7 @@ export default function AdminDashboard() {
     setEditStreak(user.streak || 0);
     setEditEmail(user.email);
     setEditPassword(''); // Don't show current password
+    setEditProfilePicture(user.profilePicture || '');
     setSelectedBadges(user.badges.map((b: any) => b.badge._id || b.badge));
   };
 
@@ -184,7 +188,8 @@ export default function AdminDashboard() {
         points: editPoints,
         streak: editStreak,
         badges: selectedBadges,
-        email: editEmail
+        email: editEmail,
+        profilePicture: editProfilePicture
       };
 
       if (editPassword) {
@@ -442,6 +447,10 @@ export default function AdminDashboard() {
                                 <div className="grid gap-2">
                                   <Label>Email</Label>
                                   <Input value={editEmail} onChange={e => setEditEmail(e.target.value)} />
+                                </div>
+                                <div className="grid gap-2">
+                                  <Label>Profile Picture URL</Label>
+                                  <Input placeholder="https://example.com/image.png" value={editProfilePicture} onChange={e => setEditProfilePicture(e.target.value)} />
                                 </div>
                                 <div className="grid gap-2">
                                   <Label>New Password (leave empty to keep current)</Label>

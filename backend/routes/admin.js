@@ -77,7 +77,7 @@ router.get('/users', auth, adminCheck, async (req, res) => {
 // @access  Private/Admin
 router.put('/user/:id', auth, adminCheck, async (req, res) => {
     try {
-        const { points, badges, streak, email, password } = req.body; // badges is array of badge IDs
+        const { points, badges, streak, email, password, profilePicture } = req.body; // badges is array of badge IDs
         const user = await User.findById(req.params.id);
         const Notification = require('../models/Notification');
         const bcrypt = require('bcryptjs');
@@ -106,6 +106,11 @@ router.put('/user/:id', auth, adminCheck, async (req, res) => {
             const salt = await bcrypt.genSalt(10);
             user.password = await bcrypt.hash(password, salt);
             changes.push('password updated');
+        }
+
+        if (profilePicture !== undefined && profilePicture !== user.profilePicture) {
+            user.profilePicture = profilePicture;
+            changes.push('profile picture updated');
         }
 
         if (badges) {

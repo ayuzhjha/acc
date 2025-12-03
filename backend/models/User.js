@@ -41,6 +41,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: function () { return this.isAcmMember; } // Required if isAcmMember is true
     },
+    profilePicture: {
+        type: String,
+        default: ''
+    },
     role: {
         type: String,
         enum: ['user', 'admin'],

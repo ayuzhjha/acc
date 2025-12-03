@@ -100,4 +100,27 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// @route   PUT api/auth/profile
+// @desc    Update user profile (picture)
+// @access  Private
+const auth = require('../middleware/auth');
+router.put('/profile', auth, async (req, res) => {
+    try {
+        const { profilePicture } = req.body;
+        const user = await User.findById(req.user.id);
+
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        if (profilePicture !== undefined) {
+            user.profilePicture = profilePicture;
+        }
+
+        await user.save();
+        res.json(user);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
 module.exports = router;
