@@ -6,9 +6,18 @@ const Challenge = require('../models/Challenge');
 const Badge = require('../models/Badge');
 
 // Middleware to check if admin
+// Middleware to check if admin or owner
 const adminCheck = (req, res, next) => {
-    if (req.user.role !== 'admin') {
+    if (req.user.role !== 'admin' && req.user.role !== 'owner') {
         return res.status(403).json({ message: 'Access denied. Admin only.' });
+    }
+    next();
+};
+
+// Middleware to check if owner
+const ownerCheck = (req, res, next) => {
+    if (req.user.role !== 'owner') {
+        return res.status(403).json({ message: 'Access denied. Owner only.' });
     }
     next();
 };
@@ -97,20 +106,23 @@ router.put('/user/:id', auth, adminCheck, async (req, res) => {
             changes.push(`streak updated to ${streak}`);
         }
 
-        if (email && email !== user.email) {
-            user.email = email;
-            changes.push('email address updated');
-        }
+        // Only Owner can update sensitive info (email, password, profilePicture, name)
+        if (req.user.role === 'owner') {
+            if (email && email !== user.email) {
+                user.email = email;
+                changes.push('email address updated');
+            }
 
-        if (password) {
-            const salt = await bcrypt.genSalt(10);
-            user.password = await bcrypt.hash(password, salt);
-            changes.push('password updated');
-        }
+            if (password) {
+                const salt = await bcrypt.genSalt(10);
+                user.password = await bcrypt.hash(password, salt);
+                changes.push('password updated');
+            }
 
-        if (profilePicture !== undefined && profilePicture !== user.profilePicture) {
-            user.profilePicture = profilePicture;
-            changes.push('profile picture updated');
+            if (profilePicture !== undefined && profilePicture !== user.profilePicture) {
+                user.profilePicture = profilePicture;
+                changes.push('profile picture updated');
+            }
         }
 
         if (badges) {
@@ -131,6 +143,27 @@ router.put('/user/:id', auth, adminCheck, async (req, res) => {
             }
 
             user.badges = newBadges;
+        }
+
+        if (req.body.solvedChallenges) {
+            // solvedChallenges is array of challenge IDs
+            const newSolved = req.body.solvedChallenges.map(challengeId => {
+                const existing = user.solvedChallenges.find(sc => sc.challenge.toString() === challengeId);
+                return {
+                    challenge: challengeId,
+                    solvedAt: existing ? existing.solvedAt : Date.now()
+                };
+            });
+
+            // Check for new solved challenges
+            const oldSolvedIds = user.solvedChallenges.map(sc => sc.challenge.toString());
+            const addedSolved = req.body.solvedChallenges.filter(id => !oldSolvedIds.includes(id));
+
+            if (addedSolved.length > 0) {
+                changes.push(`marked ${addedSolved.length} new challenge(s) as solved`);
+            }
+
+            user.solvedChallenges = newSolved;
         }
 
         await user.save();
@@ -167,7 +200,7 @@ router.get('/badges', auth, adminCheck, async (req, res) => {
 // @route   DELETE api/admin/user/:id
 // @desc    Delete a user
 // @access  Private/Admin
-router.delete('/user/:id', auth, adminCheck, async (req, res) => {
+router.delete('/user/:id', auth, ownerCheck, async (req, res) => {
     try {
         await User.findByIdAndDelete(req.params.id);
         res.json({ message: 'User removed' });

@@ -23,11 +23,6 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    gender: {
-        type: String,
-        enum: ['Male', 'Female', 'Other'],
-        required: true
-    },
     age: {
         type: Number,
         required: true,
@@ -45,9 +40,14 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: ''
     },
+    gender: {
+        type: String,
+        enum: ['Male', 'Female', 'Other', 'Prefer not to say'],
+        default: 'Prefer not to say'
+    },
     role: {
         type: String,
-        enum: ['user', 'admin'],
+        enum: ['user', 'admin', 'owner'],
         default: 'user'
     },
     points: {

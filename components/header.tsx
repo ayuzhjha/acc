@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +13,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import {
@@ -40,6 +49,11 @@ export function Header() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [profilePicUrl, setProfilePicUrl] = useState('');
+
+  // Edit Profile State
+  const [editName, setEditName] = useState('');
+  const [editGender, setEditGender] = useState('');
+
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // Renamed from isOpen to avoid conflict
 
@@ -57,7 +71,22 @@ export function Header() {
     }
   }, [user]);
 
-  const handleUpdateProfilePic = async () => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 3 * 1024 * 1024) { // 3MB limit
+        toast.error("Image size must be less than 3MB");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfilePicUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleUpdateProfile = async () => {
     try {
       const res = await fetch(`${API_URL}/api/auth/profile`, {
         method: 'PUT',
@@ -65,17 +94,25 @@ export function Header() {
           'Content-Type': 'application/json',
           'x-auth-token': localStorage.getItem('token') || ''
         },
-        body: JSON.stringify({ profilePicture: profilePicUrl })
+        body: JSON.stringify({
+          name: editName,
+          gender: editGender,
+          profilePicture: profilePicUrl
+        })
       });
 
       if (res.ok) {
+        const updatedUser = await res.json();
+        localStorage.setItem('user', JSON.stringify(updatedUser));
         setIsEditingProfile(false);
-        // Ideally update user context here, but for now a reload or re-fetch works
+        toast.success("Profile updated successfully!");
         window.location.reload();
+      } else {
+        toast.error("Failed to update profile");
       }
     } catch (error) {
-      console.error("Failed to update profile picture", error);
-      toast.error("Failed to update profile picture.");
+      console.error("Failed to update profile", error);
+      toast.error("Failed to update profile.");
     }
   };
 
@@ -117,6 +154,8 @@ export function Header() {
           if (currentUser) {
             if (currentUser.badges) setUserBadges(currentUser.badges);
             if (currentUser.profilePicture) setProfilePicUrl(currentUser.profilePicture);
+            if (currentUser.name) setEditName(currentUser.name);
+            if (currentUser.gender) setEditGender(currentUser.gender);
           }
         })
         .catch(err => console.error("Failed to fetch user data", err));
@@ -208,7 +247,7 @@ export function Header() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center gap-2 px-2">
                     <Avatar className="h-8 w-8 border border-border">
-                      <AvatarImage src={user.avatarUrl || "/placeholder.svg"} alt={user.name} />
+                      <AvatarImage src={user.profilePicture || "/default.svg"} alt={user.name} />
                       <AvatarFallback className="bg-primary/20 text-primary text-xs">
                         {user.name
                           ? user.name.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase()
@@ -217,7 +256,9 @@ export function Header() {
                     </Avatar>
                     <div className="hidden lg:flex flex-col items-start">
                       <span className="text-sm font-medium">{user.name}</span>
-                      <span className="text-xs text-muted-foreground">#{user.rank || 'N/A'}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {user.role === 'admin' ? 'System Admin' : `#${user.rank || 'N/A'}`}
+                      </span>
                     </div>
                   </Button>
                 </DropdownMenuTrigger>
@@ -242,7 +283,7 @@ export function Header() {
                     Connect GitHub
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  {user.role === 'admin' && (
+                  {(user.role === 'admin' || user.role === 'owner') && (
                     <>
                       <DropdownMenuItem asChild>
                         <Link href="/admin" className="w-full cursor-pointer">
@@ -265,17 +306,69 @@ export function Header() {
                   <DialogHeader>
                     <DialogTitle>User Profile</DialogTitle>
                   </DialogHeader>
-                  <div className="flex flex-col items-center gap-4 py-4">
-                    <Avatar className="h-24 w-24 border-2 border-primary">
-                      <AvatarImage src={user.avatarUrl || "/placeholder.svg"} alt={user.name} />
-                      <AvatarFallback className="text-2xl">
-                        {user.name ? user.name.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase() : "U"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="text-center">
-                      <h2 className="text-xl font-bold">{user.name}</h2>
-                      <p className="text-muted-foreground">{user.email}</p>
+                  <div className="grid gap-4 py-4">
+                    <div className="flex flex-col items-center gap-4">
+                      <Avatar className="h-24 w-24 border-2 border-primary">
+                        <AvatarImage src={profilePicUrl || "/default.svg"} alt={user.name} />
+                        <AvatarFallback className="text-2xl">{user.name?.charAt(0)}</AvatarFallback>
+                      </Avatar>
+
+                      {isEditingProfile ? (
+                        <div className="flex flex-col gap-3 w-full">
+                          <div className="grid gap-2">
+                            <Label>Profile Picture</Label>
+                            <div className="flex gap-2">
+                              <Input type="file" accept="image/*" onChange={handleFileChange} />
+                              {profilePicUrl && (
+                                <Button variant="outline" size="icon" onClick={() => setProfilePicUrl('')} title="Remove Picture">
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground">Max size: 3MB</p>
+                          </div>
+
+                          <div className="grid gap-2">
+                            <Label>Name</Label>
+                            <Input value={editName} onChange={(e) => setEditName(e.target.value)} />
+                          </div>
+
+                          <div className="grid gap-2">
+                            <Label>Gender</Label>
+                            <Select value={editGender} onValueChange={setEditGender}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select Gender" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Male">Male</SelectItem>
+                                <SelectItem value="Female">Female</SelectItem>
+                                <SelectItem value="Other">Other</SelectItem>
+                                <SelectItem value="Prefer not to say">Prefer not to say</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="flex gap-2 justify-end mt-2">
+                            <Button variant="ghost" onClick={() => setIsEditingProfile(false)}>Cancel</Button>
+                            <Button onClick={handleUpdateProfile}>Save Changes</Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <Button variant="outline" size="sm" onClick={() => setIsEditingProfile(true)}>
+                          Edit Profile
+                        </Button>
+                      )}
                     </div>
+
+                    {!isEditingProfile && (
+                      <>
+                        <div className="space-y-1 text-center">
+                          <h2 className="text-xl font-bold">{user.name}</h2>
+                          <p className="text-sm text-muted-foreground">{user.email}</p>
+                          <p className="text-xs text-muted-foreground">{user.gender}</p>
+                        </div>
+                      </>
+                    )}
 
                     <div className="w-full mt-4">
                       <h3 className="font-semibold mb-3">Badges Earned</h3>

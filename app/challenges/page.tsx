@@ -82,17 +82,17 @@ export default function ChallengesPage() {
       </CardContent>
       <CardFooter>
         {challenge.status === 'ended' && challenge.type === 'platform' ? (
-          <Button className="w-full" disabled>
+          <Button className="w-full mt-2" disabled>
             Ended <Lock className="ml-2 h-4 w-4" />
           </Button>
         ) : challenge.type === 'platform' && challenge.externalLink ? (
-          <Button className="w-full" asChild>
+          <Button className="w-full mt-2" asChild>
             <a href={challenge.externalLink} target="_blank" rel="noopener noreferrer">
               Solve on Platform <ExternalLink className="ml-2 h-4 w-4" />
             </a>
           </Button>
         ) : (
-          <Button className="w-full" asChild>
+          <Button className="w-full mt-2" asChild>
             <Link href={`/challenges/${challenge._id}`}>
               {challenge.status === 'ended' ? 'View Problem' : 'View Problem'} <ArrowRight className="ml-2 h-4 w-4" />
             </Link>

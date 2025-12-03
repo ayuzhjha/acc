@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { toast } from 'sonner';
 import { Loader2, Plus, Edit, Trash, Shield, Save } from 'lucide-react';
 import { Badge } from "@/components/ui/badge"
@@ -56,7 +57,9 @@ export default function AdminDashboard() {
   const [editEmail, setEditEmail] = useState('');
   const [editPassword, setEditPassword] = useState('');
   const [editProfilePicture, setEditProfilePicture] = useState('');
+
   const [selectedBadges, setSelectedBadges] = useState<string[]>([]);
+  const [selectedSolvedChallenges, setSelectedSolvedChallenges] = useState<string[]>([]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -68,7 +71,7 @@ export default function AdminDashboard() {
       return;
     }
 
-    if (user.role !== 'admin') {
+    if (user.role !== 'admin' && user.role !== 'owner') {
       toast.error('Access denied. Admin only.');
       router.push('/');
       return;
@@ -179,6 +182,7 @@ export default function AdminDashboard() {
     setEditPassword(''); // Don't show current password
     setEditProfilePicture(user.profilePicture || '');
     setSelectedBadges(user.badges.map((b: any) => b.badge._id || b.badge));
+    setSelectedSolvedChallenges(user.solvedChallenges.map((sc: any) => sc.challenge._id || sc.challenge));
   };
 
   const handleSaveUser = async () => {
@@ -188,6 +192,7 @@ export default function AdminDashboard() {
         points: editPoints,
         streak: editStreak,
         badges: selectedBadges,
+        solvedChallenges: selectedSolvedChallenges,
         email: editEmail,
         profilePicture: editProfilePicture
       };
@@ -241,6 +246,14 @@ export default function AdminDashboard() {
       setSelectedBadges(selectedBadges.filter(id => id !== badgeId));
     } else {
       setSelectedBadges([...selectedBadges, badgeId]);
+    }
+  };
+
+  const toggleSolvedChallenge = (challengeId: string) => {
+    if (selectedSolvedChallenges.includes(challengeId)) {
+      setSelectedSolvedChallenges(selectedSolvedChallenges.filter(id => id !== challengeId));
+    } else {
+      setSelectedSolvedChallenges([...selectedSolvedChallenges, challengeId]);
     }
   };
 
@@ -425,37 +438,67 @@ export default function AdminDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((user: any) => (
-                    <TableRow key={user._id}>
-                      <TableCell>{user.name}</TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>{user.points}</TableCell>
-                      <TableCell>{user.badges?.length || 0}</TableCell>
+                  {users.map((userRow: any) => (
+                    <TableRow key={userRow._id}>
+                      <TableCell>{userRow.name}</TableCell>
+                      <TableCell>{userRow.email}</TableCell>
+                      <TableCell>{userRow.points}</TableCell>
+                      <TableCell>{userRow.badges?.length || 0}</TableCell>
                       <TableCell>
                         <div className="flex gap-2">
                           <Dialog>
                             <DialogTrigger asChild>
-                              <Button variant="ghost" size="sm" onClick={() => handleEditUser(user)}>
+                              <Button variant="ghost" size="sm" onClick={() => handleEditUser(userRow)}>
                                 <Edit className="h-4 w-4" />
                               </Button>
                             </DialogTrigger>
-                            <DialogContent>
+                            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                               <DialogHeader>
-                                <DialogTitle>Edit User: {user.name}</DialogTitle>
+                                <DialogTitle>Edit User: {userRow.name}</DialogTitle>
                               </DialogHeader>
                               <div className="grid gap-4 py-4">
-                                <div className="grid gap-2">
-                                  <Label>Email</Label>
-                                  <Input value={editEmail} onChange={e => setEditEmail(e.target.value)} />
-                                </div>
-                                <div className="grid gap-2">
-                                  <Label>Profile Picture URL</Label>
-                                  <Input placeholder="https://example.com/image.png" value={editProfilePicture} onChange={e => setEditProfilePicture(e.target.value)} />
-                                </div>
-                                <div className="grid gap-2">
-                                  <Label>New Password (leave empty to keep current)</Label>
-                                  <Input type="password" placeholder="New Password" value={editPassword} onChange={e => setEditPassword(e.target.value)} />
-                                </div>
+                                {user.role === 'owner' && (
+                                  <>
+                                    <div className="grid gap-2">
+                                      <Label>Email</Label>
+                                      <Input value={editEmail} onChange={e => setEditEmail(e.target.value)} />
+                                    </div>
+                                    <div className="grid gap-2">
+                                      <Label>Profile Picture</Label>
+                                      <div className="flex gap-2 items-center">
+                                        <Avatar className="h-10 w-10">
+                                          <AvatarImage src={editProfilePicture || "/default.svg"} />
+                                          <AvatarFallback>U</AvatarFallback>
+                                        </Avatar>
+                                        <Input
+                                          type="file"
+                                          accept="image/*"
+                                          onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                              if (file.size > 3 * 1024 * 1024) {
+                                                toast.error("Image size must be less than 3MB");
+                                                return;
+                                              }
+                                              const reader = new FileReader();
+                                              reader.onloadend = () => setEditProfilePicture(reader.result as string);
+                                              reader.readAsDataURL(file);
+                                            }
+                                          }}
+                                        />
+                                        {editProfilePicture && (
+                                          <Button variant="ghost" size="icon" onClick={() => setEditProfilePicture('')} title="Remove Picture">
+                                            <Trash className="h-4 w-4 text-destructive" />
+                                          </Button>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div className="grid gap-2">
+                                      <Label>New Password (leave empty to keep current)</Label>
+                                      <Input type="password" placeholder="New Password" value={editPassword} onChange={e => setEditPassword(e.target.value)} />
+                                    </div>
+                                  </>
+                                )}
                                 <div className="grid gap-2">
                                   <Label>Points</Label>
                                   <Input type="number" value={editPoints} onChange={e => setEditPoints(Number(e.target.value))} />
@@ -481,13 +524,32 @@ export default function AdminDashboard() {
                                     ))}
                                   </div>
                                 </div>
+                                <div className="grid gap-2">
+                                  <Label>Solved Challenges</Label>
+                                  <div className="grid grid-cols-1 gap-2 border p-2 rounded-md max-h-40 overflow-y-auto">
+                                    {challenges.map((challenge: any) => (
+                                      <div key={challenge._id} className="flex items-center space-x-2">
+                                        <Checkbox
+                                          id={`challenge-${challenge._id}`}
+                                          checked={selectedSolvedChallenges.includes(challenge._id)}
+                                          onCheckedChange={() => toggleSolvedChallenge(challenge._id)}
+                                        />
+                                        <label htmlFor={`challenge-${challenge._id}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                          {challenge.title} ({challenge.points} pts)
+                                        </label>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
                                 <Button onClick={handleSaveUser}>Save Changes</Button>
                               </div>
                             </DialogContent>
                           </Dialog>
-                          <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDeleteUser(user._id)}>
-                            <Trash className="h-4 w-4" />
-                          </Button>
+                          {user.role === 'owner' && userRow.role !== 'owner' && (
+                            <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDeleteUser(userRow._id)}>
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

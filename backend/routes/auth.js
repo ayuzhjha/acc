@@ -106,11 +106,13 @@ router.post('/login', async (req, res) => {
 const auth = require('../middleware/auth');
 router.put('/profile', auth, async (req, res) => {
     try {
-        const { profilePicture } = req.body;
+        const { name, gender, profilePicture } = req.body;
         const user = await User.findById(req.user.id);
 
         if (!user) return res.status(404).json({ message: 'User not found' });
 
+        if (name) user.name = name;
+        if (gender) user.gender = gender;
         if (profilePicture !== undefined) {
             user.profilePicture = profilePicture;
         }

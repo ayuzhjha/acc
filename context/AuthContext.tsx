@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { API_URL } from "@/lib/api";
 
 interface User {
     _id: string;
@@ -8,6 +9,8 @@ interface User {
     email: string;
     role: string;
     avatarUrl?: string;
+    profilePicture?: string;
+    gender?: string;
     rank?: number;
 }
 
@@ -26,15 +29,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
-        if (storedUser) {
+        const token = localStorage.getItem('token');
+
+        if (storedUser && token) {
             const parsedUser = JSON.parse(storedUser);
             // Normalize _id
             if (!parsedUser._id && parsedUser.id) {
                 parsedUser._id = parsedUser.id;
             }
             setUser(parsedUser);
+
+            // Fetch latest user data to get rank and updates
+            fetch(`${API_URL}/api/user/${parsedUser._id}`)
+                .then(res => {
+                    if (res.ok) return res.json();
+                    throw new Error('Failed to fetch user');
+                })
+                .then(updatedUser => {
+                    setUser(updatedUser);
+                    localStorage.setItem('user', JSON.stringify(updatedUser));
+                })
+                .catch(err => {
+                    console.error("Failed to refresh user data", err);
+                    // If 404 or auth error, maybe logout? For now just keep local data
+                })
+                .finally(() => setLoading(false));
+        } else {
+            setLoading(false);
         }
-        setLoading(false);
     }, []);
 
     const login = (token: string, userData: any) => {

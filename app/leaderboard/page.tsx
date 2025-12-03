@@ -38,12 +38,16 @@ export default function LeaderboardPage() {
       if (res.ok) {
         const data = await res.json();
         // Add rank to data
-        const rankedData = data.map((user: any, index: number) => ({
-          ...user,
-          rank: index + 1,
-          solves: user.solvedChallenges?.length || 0, // Assuming solvedChallenges is populated or count is available
-          weeklyChange: 0 // Placeholder as backend doesn't track history yet
-        }));
+        let currentRank = 1;
+        const rankedData = data.map((user: any) => {
+          const isSystemAdmin = user.role === 'admin';
+          return {
+            ...user,
+            rank: isSystemAdmin ? null : currentRank++, // Admins get null rank
+            solves: user.solvedChallenges?.length || 0,
+            weeklyChange: 0
+          };
+        });
         setLeaderboardData(rankedData);
       }
     } catch (error) {
@@ -104,7 +108,7 @@ export default function LeaderboardPage() {
               {/* Second Place */}
               <div className="flex flex-col items-center">
                 <Avatar className="h-16 w-16 border-4 border-slate-400 mb-2">
-                  <AvatarImage src={leaderboardData[1]?.avatarUrl || "/placeholder.svg"} alt={leaderboardData[1]?.name} />
+                  <AvatarImage src={leaderboardData[1]?.profilePicture || leaderboardData[1]?.avatarUrl || "/default.svg"} alt={leaderboardData[1]?.name} />
                   <AvatarFallback className="bg-slate-500/20 text-slate-400 text-lg">
                     {leaderboardData[1]?.name
                       .split(" ")
@@ -127,7 +131,7 @@ export default function LeaderboardPage() {
                 <div className="relative">
                   <Avatar className="h-20 w-20 border-4 border-amber-400 mb-2">
                     <AvatarImage
-                      src={leaderboardData[0]?.avatarUrl || "/placeholder.svg"}
+                      src={leaderboardData[0]?.profilePicture || leaderboardData[0]?.avatarUrl || "/default.svg"}
                       alt={leaderboardData[0]?.name}
                     />
                     <AvatarFallback className="bg-amber-500/20 text-amber-400 text-xl">
@@ -154,7 +158,7 @@ export default function LeaderboardPage() {
               {/* Third Place */}
               <div className="flex flex-col items-center">
                 <Avatar className="h-16 w-16 border-4 border-orange-400 mb-2">
-                  <AvatarImage src={leaderboardData[2]?.avatarUrl || "/placeholder.svg"} alt={leaderboardData[2]?.name} />
+                  <AvatarImage src={leaderboardData[2]?.profilePicture || leaderboardData[2]?.avatarUrl || "/default.svg"} alt={leaderboardData[2]?.name} />
                   <AvatarFallback className="bg-orange-500/20 text-orange-400 text-lg">
                     {leaderboardData[2]?.name
                       .split(" ")
@@ -180,10 +184,14 @@ export default function LeaderboardPage() {
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
                   <div className="w-12 text-center">
-                    <span className="text-2xl font-bold text-primary">#{userEntry.rank}</span>
+                    {userEntry.role === 'admin' ? (
+                      <Crown className="h-6 w-6 text-primary mx-auto" />
+                    ) : (
+                      <span className="text-2xl font-bold text-primary">#{userEntry.rank}</span>
+                    )}
                   </div>
                   <Avatar className="h-12 w-12 border-2 border-primary">
-                    <AvatarImage src={userEntry.avatarUrl || "/placeholder.svg"} alt={userEntry.name} />
+                    <AvatarImage src={userEntry.profilePicture || userEntry.avatarUrl || "/default.svg"} alt={userEntry.name} />
                     <AvatarFallback className="bg-primary/20 text-primary">
                       {userEntry.name
                         .split(" ")
@@ -198,14 +206,24 @@ export default function LeaderboardPage() {
                   <div className="flex items-center gap-6">
                     <div className="text-center">
                       <p className="text-sm text-muted-foreground">Streak</p>
-                      <p className="font-semibold text-orange-400 flex items-center gap-1">
-                        <Flame className="h-4 w-4" />
-                        {userEntry.streak}
-                      </p>
+                      {userEntry.role === 'admin' ? (
+                        <span className="text-muted-foreground">-</span>
+                      ) : (
+                        <p className="font-semibold text-orange-400 flex items-center gap-1">
+                          <Flame className="h-4 w-4" />
+                          {userEntry.streak}
+                        </p>
+                      )}
                     </div>
                     <div className="text-center">
                       <p className="text-sm text-muted-foreground">Points</p>
-                      <p className="font-bold text-primary text-xl">{userEntry.points.toLocaleString()}</p>
+                      {userEntry.role === 'admin' ? (
+                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/50 hover:bg-primary/20 transition-colors">
+                          System Admin
+                        </Badge>
+                      ) : (
+                        <p className="font-bold text-primary text-xl">{userEntry.points.toLocaleString()}</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -261,7 +279,7 @@ export default function LeaderboardPage() {
                     >
                       {/* Rank */}
                       <div className="col-span-1">
-                        {RankIcon ? (
+                        {RankIcon && entry.rank ? (
                           <RankIcon
                             className={cn(
                               "h-6 w-6",
@@ -271,14 +289,14 @@ export default function LeaderboardPage() {
                             )}
                           />
                         ) : (
-                          <span className="text-lg font-semibold text-muted-foreground">{entry.rank}</span>
+                          <span className="text-lg font-semibold text-muted-foreground">{entry.rank || '-'}</span>
                         )}
                       </div>
 
                       {/* User */}
                       <div className="col-span-5 flex items-center gap-3">
                         <Avatar className="h-10 w-10 border border-border">
-                          <AvatarImage src={entry.avatarUrl || "/placeholder.svg"} alt={entry.name} />
+                          <AvatarImage src={entry.profilePicture || entry.avatarUrl || "/default.svg"} alt={entry.name} />
                           <AvatarFallback className="bg-primary/20 text-primary text-sm">
                             {entry.name
                               .split(" ")
@@ -309,12 +327,18 @@ export default function LeaderboardPage() {
 
                       {/* Solves */}
                       <div className="col-span-2 text-center hidden sm:block">
-                        <span className="text-foreground font-medium">{entry.solves}</span>
+                        {entry.role === 'admin' ? (
+                          <span className="text-muted-foreground">-</span>
+                        ) : (
+                          <span className="text-foreground font-medium">{entry.solves}</span>
+                        )}
                       </div>
 
                       {/* Streak */}
                       <div className="col-span-2 text-center hidden sm:block">
-                        {entry.streak > 0 ? (
+                        {entry.role === 'admin' ? (
+                          <span className="text-muted-foreground">-</span>
+                        ) : entry.streak > 0 ? (
                           <span className="inline-flex items-center gap-1 text-orange-400 font-medium">
                             <Flame className="h-4 w-4" />
                             {entry.streak}
@@ -324,9 +348,15 @@ export default function LeaderboardPage() {
                         )}
                       </div>
 
-                      {/* Points */}
+                      {/* Points / Admin Label */}
                       <div className="col-span-2 text-right">
-                        <span className="text-lg font-bold text-primary">{entry.points.toLocaleString()}</span>
+                        {entry.role === 'admin' ? (
+                          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/50 hover:bg-primary/20 transition-colors">
+                            System Admin
+                          </Badge>
+                        ) : (
+                          <span className="text-lg font-bold text-primary">{entry.points.toLocaleString()}</span>
+                        )}
                       </div>
                     </div>
                   )

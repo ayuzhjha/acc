@@ -36,12 +36,20 @@ router.get('/challenges/latest', async (req, res) => {
 // @access  Public
 router.get('/leaderboard', async (req, res) => {
     try {
-        const users = await User.find()
-            .select('name email points streak badges avatarUrl solvedChallenges')
+        // 1. Get top users (excluding admin and owner)
+        const users = await User.find({ role: 'user' })
+            .select('name email points streak badges avatarUrl profilePicture solvedChallenges role')
             .populate('badges.badge')
             .sort({ points: -1 })
             .limit(50);
-        res.json(users);
+
+        // 2. Get admins (excluding owner)
+        const admins = await User.find({ role: 'admin' })
+            .select('name email points streak badges avatarUrl profilePicture solvedChallenges role')
+            .populate('badges.badge');
+
+        // 3. Combine: Users first, then Admins at the bottom
+        res.json([...users, ...admins]);
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
@@ -74,7 +82,10 @@ router.get('/user/:id', async (req, res) => {
             return res.status(404).json({ msg: 'User not found' });
         }
 
-        res.json(user);
+        // Calculate rank
+        const rank = await User.countDocuments({ points: { $gt: user.points } }) + 1;
+
+        res.json({ ...user.toObject(), rank });
     } catch (err) {
         console.error(err.message);
         if (err.kind === 'ObjectId') {
