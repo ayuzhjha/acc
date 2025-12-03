@@ -34,16 +34,19 @@ We used modern, industry-standard tools. Here's a simple breakdown:
 ## ✨ Features
 
 ### **For Users**
-- **🔐 Secure Login/Register**: Sign up with your college email (`@stu.xim.edu.in`).
+- **🔐 Secure Login/Register**: Sign up with your college email (`@stu.xim.edu.in`). Includes a "Forget Password" link to contact support.
 - **🏆 Leaderboard**: See who has the most points and highest streaks.
 - **🧩 Weekly Challenges**: Access the current active challenge and see upcoming ones.
 - **🎖️ Badges**: Earn cool badges for achievements (e.g., "First Win", "Streak Master").
 - **👤 Profile**: View your rank, points, and earned badges.
 
-### **For Admins**
+### **For Admins & Owners**
 - **⚙️ Dashboard**: A special panel to manage the whole platform.
+- **👑 Owner Role**: Full access to everything, including deleting users and managing other admins.
+- **🛡️ Admin Role**: Can create challenges and manage points but cannot delete users or modify sensitive info.
 - **➕ Create Challenges**: Post new problems with descriptions, test cases, and points.
-- **👥 Manage Users**: Update user points, assign badges manually, or delete users.
+- **👥 Manage Users**: Update user points and assign badges.
+- **🏷️ System Admin Badge**: Admins appear on the leaderboard with a special "System Admin" badge instead of a rank.
 
 ---
 
