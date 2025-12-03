@@ -52,6 +52,7 @@ export default function AdminDashboard() {
   // User Edit State
   const [editingUser, setEditingUser] = useState<any>(null);
   const [editPoints, setEditPoints] = useState(0);
+  const [editStreak, setEditStreak] = useState(0);
   const [selectedBadges, setSelectedBadges] = useState<string[]>([]);
 
   useEffect(() => {
@@ -170,22 +171,33 @@ export default function AdminDashboard() {
   const handleEditUser = (user: any) => {
     setEditingUser(user);
     setEditPoints(user.points);
+    setEditStreak(user.streak || 0);
+    setEditEmail(user.email);
+    setEditPassword(''); // Don't show current password
     setSelectedBadges(user.badges.map((b: any) => b.badge._id || b.badge));
   };
 
   const handleSaveUser = async () => {
     if (!editingUser) return;
     try {
+      const body: any = {
+        points: editPoints,
+        streak: editStreak,
+        badges: selectedBadges,
+        email: editEmail
+      };
+
+      if (editPassword) {
+        body.password = editPassword;
+      }
+
       const res = await fetch(`${API_URL}/api/admin/user/${editingUser._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'x-auth-token': token
         },
-        body: JSON.stringify({
-          points: editPoints,
-          badges: selectedBadges
-        })
+        body: JSON.stringify(body)
       });
 
       if (res.ok) {
@@ -428,8 +440,20 @@ export default function AdminDashboard() {
                               </DialogHeader>
                               <div className="grid gap-4 py-4">
                                 <div className="grid gap-2">
+                                  <Label>Email</Label>
+                                  <Input value={editEmail} onChange={e => setEditEmail(e.target.value)} />
+                                </div>
+                                <div className="grid gap-2">
+                                  <Label>New Password (leave empty to keep current)</Label>
+                                  <Input type="password" placeholder="New Password" value={editPassword} onChange={e => setEditPassword(e.target.value)} />
+                                </div>
+                                <div className="grid gap-2">
                                   <Label>Points</Label>
                                   <Input type="number" value={editPoints} onChange={e => setEditPoints(Number(e.target.value))} />
+                                </div>
+                                <div className="grid gap-2">
+                                  <Label>Streak</Label>
+                                  <Input type="number" value={editStreak} onChange={e => setEditStreak(Number(e.target.value))} />
                                 </div>
                                 <div className="grid gap-2">
                                   <Label>Badges</Label>

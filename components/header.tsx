@@ -32,6 +32,52 @@ export function Header() {
   const { user, logout } = useAuth()
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [userBadges, setUserBadges] = useState<any[]>([])
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const handleLogout = () => {
+    logout();
+    setIsProfileOpen(false);
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchNotifications();
+      // Poll for notifications every minute
+      const interval = setInterval(fetchNotifications, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  const fetchNotifications = async () => {
+    if (!user) return;
+    try {
+      const res = await fetch(`${API_URL}/api/notifications`, {
+        headers: { 'x-auth-token': localStorage.getItem('token') || '' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(data);
+        setUnreadCount(data.filter((n: any) => !n.read).length);
+      }
+    } catch (error) {
+      console.error("Failed to fetch notifications", error);
+    }
+  };
+
+  const markAsRead = async () => {
+    if (unreadCount === 0) return;
+    try {
+      await fetch(`${API_URL}/api/notifications/read`, {
+        method: 'PUT',
+        headers: { 'x-auth-token': localStorage.getItem('token') || '' }
+      });
+      setUnreadCount(0);
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    } catch (error) {
+      console.error("Failed to mark notifications as read", error);
+    }
+  };
 
   useEffect(() => {
     if (isProfileOpen && user?._id) {
@@ -46,10 +92,6 @@ export function Header() {
         .catch(err => console.error("Failed to fetch user badges", err));
     }
   }, [isProfileOpen, user]);
-
-  const handleLogout = () => {
-    logout();
-  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl">

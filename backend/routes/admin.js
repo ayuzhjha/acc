@@ -73,16 +73,40 @@ router.get('/users', auth, adminCheck, async (req, res) => {
 });
 
 // @route   PUT api/admin/user/:id
-// @desc    Update user (points, badges)
+// @desc    Update user (points, badges, streak, email, password)
 // @access  Private/Admin
 router.put('/user/:id', auth, adminCheck, async (req, res) => {
     try {
-        const { points, badges } = req.body; // badges is array of badge IDs
+        const { points, badges, streak, email, password } = req.body; // badges is array of badge IDs
         const user = await User.findById(req.params.id);
+        const Notification = require('../models/Notification');
+        const bcrypt = require('bcryptjs');
 
         if (!user) return res.status(404).json({ message: 'User not found' });
 
-        if (points !== undefined) user.points = points;
+        let changes = [];
+
+        if (points !== undefined && points !== user.points) {
+            const diff = points - user.points;
+            user.points = points;
+            changes.push(diff > 0 ? `gained ${diff} points` : `lost ${Math.abs(diff)} points`);
+        }
+
+        if (streak !== undefined && streak !== user.streak) {
+            user.streak = streak;
+            changes.push(`streak updated to ${streak}`);
+        }
+
+        if (email && email !== user.email) {
+            user.email = email;
+            changes.push('email address updated');
+        }
+
+        if (password) {
+            const salt = await bcrypt.genSalt(10);
+            user.password = await bcrypt.hash(password, salt);
+            changes.push('password updated');
+        }
 
         if (badges) {
             const newBadges = badges.map(badgeId => {
@@ -92,10 +116,30 @@ router.put('/user/:id', auth, adminCheck, async (req, res) => {
                     earnedAt: existing ? existing.earnedAt : Date.now()
                 };
             });
+
+            // Check for new badges
+            const oldBadgeIds = user.badges.map(b => b.badge.toString());
+            const addedBadges = badges.filter(id => !oldBadgeIds.includes(id));
+
+            if (addedBadges.length > 0) {
+                changes.push(`earned ${addedBadges.length} new badge(s)`);
+            }
+
             user.badges = newBadges;
         }
 
         await user.save();
+
+        // Create notification if there were changes
+        if (changes.length > 0) {
+            const message = `Admin update: You have ${changes.join(', ')}.`;
+            await new Notification({
+                user: user._id,
+                message: message,
+                type: 'info'
+            }).save();
+        }
+
         res.json(user);
     } catch (err) {
         console.error(err.message);
