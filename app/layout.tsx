@@ -6,7 +6,6 @@ import "./globals.css"
 import { AuthProvider } from "@/context/AuthContext"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
-import SplashCursor from "@/components/SplashCursor"
 
 const inter = Inter({
     subsets: ["latin"],
@@ -60,7 +59,6 @@ export default function RootLayout({
                     disableTransitionOnChange
                 >
                     <AuthProvider>
-                        <SplashCursor />
                         {children}
                         <Toaster />
                     </AuthProvider>
