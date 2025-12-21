@@ -14,13 +14,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { toast } from 'sonner';
-import { Loader2, Plus, Edit, Trash, Shield, Save, Megaphone } from 'lucide-react';
+import { Loader2, Plus, Edit, Trash, Shield, Save, Megaphone, Users, Trophy, Target, Award, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from '@/components/ui/checkbox';
-
 import { useAuth } from "@/context/AuthContext"
-
 import { API_URL } from "@/lib/api"
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
+  PieChart, Pie, Cell, LineChart, Line
+} from 'recharts';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -64,6 +66,27 @@ export default function AdminDashboard() {
 
   const [selectedBadges, setSelectedBadges] = useState<string[]>([]);
   const [selectedSolvedChallenges, setSelectedSolvedChallenges] = useState<string[]>([]);
+
+  // Derived Stats
+  const totalUsers = users.length;
+  const activeChallenges = challenges.filter((c: any) => c.status === 'active').length;
+  const totalSolved = users.reduce((acc: number, user: any) => acc + (user.solvedChallenges?.length || 0), 0);
+  const verifiedUsers = users.filter((u: any) => u.isVerified).length;
+
+  // Chart Data Preparation
+  const gradYearData = users.reduce((acc: any, user: any) => {
+    const year = user.graduationYear || 'Unknown';
+    acc[year] = (acc[year] || 0) + 1;
+    return acc;
+  }, {});
+  const gradYearChartData = Object.entries(gradYearData).map(([year, count]) => ({ year, count })).sort((a: any, b: any) => a.year - b.year);
+
+  const difficultyData = challenges.reduce((acc: any, challenge: any) => {
+    acc[challenge.difficulty] = (acc[challenge.difficulty] || 0) + 1;
+    return acc;
+  }, {});
+  const difficultyChartData = Object.entries(difficultyData).map(([name, value]) => ({ name, value }));
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
   useEffect(() => {
     if (authLoading) return;
@@ -317,13 +340,138 @@ export default function AdminDashboard() {
       <main className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
 
-        <Tabs defaultValue="challenges">
+        <Tabs defaultValue="overview">
           <TabsList className="mb-8">
-            <TabsTrigger value="challenges">Challenges</TabsTrigger>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="challenges">Challenges</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             {user?.role === 'owner' && <TabsTrigger value="announcements">Announcements</TabsTrigger>}
           </TabsList>
+
+          <TabsContent value="overview" className="space-y-8">
+            {/* Summary Cards */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{totalUsers}</div>
+                  <p className="text-xs text-muted-foreground">{verifiedUsers} Verified</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Active Challenges</CardTitle>
+                  <Target className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{activeChallenges}</div>
+                  <p className="text-xs text-muted-foreground">of {challenges.length} Total</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Solutions</CardTitle>
+                  <Trophy className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{totalSolved}</div>
+                  <p className="text-xs text-muted-foreground">Successful submissions</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Platform Health</CardTitle>
+                  <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">Good</div>
+                  <p className="text-xs text-muted-foreground">All systems operational</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Charts Section */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+              <Card className="col-span-4">
+                <CardHeader>
+                  <CardTitle>User Demographics</CardTitle>
+                  <CardDescription>Distribution by Graduation Year</CardDescription>
+                </CardHeader>
+                <CardContent className="pl-2">
+                  <ResponsiveContainer width="100%" height={350}>
+                    <BarChart data={gradYearChartData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="year" />
+                      <YAxis allowDecimals={false} />
+                      <RechartsTooltip />
+                      <Legend />
+                      <Bar dataKey="count" fill="#8884d8" name="Students" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+              <Card className="col-span-3">
+                <CardHeader>
+                  <CardTitle>Challenge Difficulty</CardTitle>
+                  <CardDescription>Breakdown by difficulty level</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={350}>
+                    <PieChart>
+                      <Pie
+                        data={difficultyChartData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={100}
+                        fill="#8884d8"
+                        dataKey="value"
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      >
+                        {difficultyChartData.map((entry: any, index: any) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Lifecycle Flowchart */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Challenge Lifecycle</CardTitle>
+                <CardDescription>How a challenge moves through the system</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-center space-x-4 py-8">
+                  <div className="flex flex-col items-center p-4 border rounded-lg bg-secondary/10">
+                    <Edit className="h-8 w-8 mb-2 text-blue-500" />
+                    <span className="font-semibold">Draft</span>
+                    <span className="text-xs text-muted-foreground">Admin Creates</span>
+                  </div>
+                  <ArrowRight className="h-6 w-6 text-muted-foreground" />
+                  <div className="flex flex-col items-center p-4 border rounded-lg bg-green-500/10">
+                    <Target className="h-8 w-8 mb-2 text-green-500" />
+                    <span className="font-semibold">Active</span>
+                    <span className="text-xs text-muted-foreground">Students Solve</span>
+                  </div>
+                  <ArrowRight className="h-6 w-6 text-muted-foreground" />
+                  <div className="flex flex-col items-center p-4 border rounded-lg bg-secondary/10">
+                    <Award className="h-8 w-8 mb-2 text-yellow-500" />
+                    <span className="font-semibold">Ended</span>
+                    <span className="text-xs text-muted-foreground">Points Awarded</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="announcements">
             <div className="flex justify-between items-center mb-6">
