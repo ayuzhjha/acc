@@ -1,5 +1,32 @@
 # 🚀 ACM Weekly Coding Challenge Platform
 
+<div align="center">
+
+![Last Commit](https://img.shields.io/github/last-commit/ayuzhjha/acc?style=for-the-badge)
+![Top Language](https://img.shields.io/github/languages/top/ayuzhjha/acc?style=for-the-badge)
+![Language Count](https://img.shields.io/github/languages/count/ayuzhjha/acc?style=for-the-badge)
+
+<h3>Built with the tools and technologies:</h3>
+
+<img src="https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB" alt="Express" />
+<img src="https://img.shields.io/badge/json-5E5C5C?style=for-the-badge&logo=json&logoColor=white" alt="JSON" />
+<img src="https://img.shields.io/badge/markdown-%23000000.svg?style=for-the-badge&logo=markdown&logoColor=white" alt="Markdown" />
+<img src="https://img.shields.io/badge/NPM-%23CB3837.svg?style=for-the-badge&logo=npm&logoColor=white" alt="NPM" />
+<img src="https://img.shields.io/badge/autoprefixer-DD3735?style=for-the-badge&logo=PostCSS&logoColor=white" alt="Autoprefixer" />
+<img src="https://img.shields.io/badge/Mongoose-880000?style=for-the-badge&logo=mongoose&logoColor=white" alt="Mongoose" />
+<img src="https://img.shields.io/badge/PostCSS-DD3A0A?style=for-the-badge&logo=PostCSS&logoColor=white" alt="PostCSS" />
+<img src="https://img.shields.io/badge/.ENV-ECD53F?style=for-the-badge&logo=.env&logoColor=black" alt=".ENV" />
+<br>
+<img src="https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E" alt="JavaScript" />
+<img src="https://img.shields.io/badge/NODEMON-%23323330.svg?style=for-the-badge&logo=nodemon&logoColor=%BBDEAD" alt="Nodemon" />
+<img src="https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB" alt="React" />
+<img src="https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+<img src="https://img.shields.io/badge/zod-%233068b7.svg?style=for-the-badge&logo=zod&logoColor=white" alt="Zod" />
+<img src="https://img.shields.io/badge/date--fns-770C57?style=for-the-badge&logo=date-fns&logoColor=white" alt="date-fns" />
+<img src="https://img.shields.io/badge/React%20Hook%20Form-%23EC5990.svg?style=for-the-badge&logo=reacthookform&logoColor=white" alt="React Hook Form" />
+
+</div>
+
 Welcome to the official platform for the **ACM Student Chapter Weekly Coding Challenges**! This website is designed to help students improve their coding skills, compete with peers, and earn recognition through badges and a global leaderboard.
 
 ## 🌟 What is this?
