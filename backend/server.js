@@ -15,6 +15,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/notifications', require('./routes/notifications'));
+app.use('/api/announcements', require('./routes/announcements'));
 app.use('/api', require('./routes/public'));
 
 // Basic Route

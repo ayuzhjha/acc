@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { toast } from 'sonner';
-import { Loader2, Plus, Edit, Trash, Shield, Save } from 'lucide-react';
+import { Loader2, Plus, Edit, Trash, Shield, Save, Megaphone } from 'lucide-react';
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -46,6 +46,10 @@ export default function AdminDashboard() {
     deadline: '',
     status: 'active'
   });
+
+  // Announcement State
+  const [announcements, setAnnouncements] = useState([]);
+  const [newAnnouncement, setNewAnnouncement] = useState({ title: '', message: '' });
 
   // Edit Challenge State
   const [editingChallenge, setEditingChallenge] = useState<any>(null);
@@ -84,15 +88,17 @@ export default function AdminDashboard() {
   const fetchData = async (authToken: string) => {
     try {
       setLoading(true);
-      const [usersRes, challengesRes, badgesRes] = await Promise.all([
+      const [usersRes, challengesRes, badgesRes, announcementsRes] = await Promise.all([
         fetch(`${API_URL}/api/admin/users`, { headers: { 'x-auth-token': authToken } }),
         fetch(`${API_URL}/api/challenges`),
-        fetch(`${API_URL}/api/admin/badges`, { headers: { 'x-auth-token': authToken } })
+        fetch(`${API_URL}/api/admin/badges`, { headers: { 'x-auth-token': authToken } }),
+        fetch(`${API_URL}/api/announcements`, { headers: { 'x-auth-token': authToken } })
       ]);
 
       if (usersRes.ok) setUsers(await usersRes.json());
       if (challengesRes.ok) setChallenges(await challengesRes.json());
       if (badgesRes.ok) setBadges(await badgesRes.json());
+      if (announcementsRes.ok) setAnnouncements(await announcementsRes.json());
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to load data');
@@ -241,6 +247,46 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleCreateAnnouncement = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/announcements`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': token
+        },
+        body: JSON.stringify(newAnnouncement)
+      });
+      if (res.ok) {
+        toast.success('Announcement created');
+        fetchData(token);
+        setNewAnnouncement({ title: '', message: '' });
+      } else {
+        toast.error('Failed to create announcement');
+      }
+    } catch (error) {
+      toast.error('Error creating announcement');
+    }
+  };
+
+  const handleDeleteAnnouncement = async (id: string) => {
+    if (!confirm('Delete this announcement?')) return;
+    try {
+      const res = await fetch(`${API_URL}/api/announcements/${id}`, {
+        method: 'DELETE',
+        headers: { 'x-auth-token': token }
+      });
+      if (res.ok) {
+        toast.success('Announcement deleted');
+        fetchData(token);
+      } else {
+        toast.error('Failed to delete announcement');
+      }
+    } catch (error) {
+      toast.error('Error deleting announcement');
+    }
+  };
+
   const toggleBadge = (badgeId: string) => {
     if (selectedBadges.includes(badgeId)) {
       setSelectedBadges(selectedBadges.filter(id => id !== badgeId));
@@ -274,8 +320,52 @@ export default function AdminDashboard() {
         <Tabs defaultValue="challenges">
           <TabsList className="mb-8">
             <TabsTrigger value="challenges">Challenges</TabsTrigger>
+            <TabsTrigger value="challenges">Challenges</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
+            {user?.role === 'owner' && <TabsTrigger value="announcements">Announcements</TabsTrigger>}
           </TabsList>
+
+          <TabsContent value="announcements">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold">Manage Announcements</h2>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button><Megaphone className="mr-2 h-4 w-4" /> New Announcement</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader><DialogTitle>Create Announcement</DialogTitle></DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label>Title</Label>
+                      <Input value={newAnnouncement.title} onChange={e => setNewAnnouncement({ ...newAnnouncement, title: e.target.value })} />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>Message</Label>
+                      <Input value={newAnnouncement.message} onChange={e => setNewAnnouncement({ ...newAnnouncement, message: e.target.value })} />
+                    </div>
+                    <Button onClick={handleCreateAnnouncement}>Post Announcement</Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+            <div className="grid gap-4">
+              {announcements.map((a: any) => (
+                <Card key={a._id}>
+                  <CardHeader>
+                    <CardTitle className="flex justify-between items-center">
+                      <span>{a.title}</span>
+                      <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDeleteAnnouncement(a._id)}>
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </CardTitle>
+                    <CardDescription>{a.message}</CardDescription>
+                    <p className="text-xs text-muted-foreground mt-2">{new Date(a.createdAt).toLocaleString()}</p>
+                  </CardHeader>
+                </Card>
+              ))}
+              {announcements.length === 0 && <p className="text-muted-foreground text-center">No announcements yet.</p>}
+            </div>
+          </TabsContent>
 
           <TabsContent value="challenges">
             <div className="flex justify-between items-center mb-6">

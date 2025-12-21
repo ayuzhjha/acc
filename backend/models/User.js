@@ -12,16 +12,30 @@ const userSchema = new mongoose.Schema({
         unique: true,
         trim: true,
         lowercase: true,
-        validate: {
-            validator: function (v) {
-                return /@stu\.xim\.edu\.in$/.test(v);
-            },
-            message: props => `${props.value} is not a valid university email! Must end with @stu.xim.edu.in`
-        }
+        // Removed validation to allow any email
     },
     password: {
         type: String,
         required: true
+    },
+    collegeName: {
+        type: String,
+        default: ''
+    },
+    graduationYear: {
+        type: Number,
+    },
+    otp: {
+        type: String,
+        select: false
+    },
+    otpExpires: {
+        type: Date,
+        select: false
+    },
+    isVerified: {
+        type: Boolean,
+        default: false
     },
     age: {
         type: Number,

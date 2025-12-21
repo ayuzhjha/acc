@@ -119,16 +119,45 @@ export function Header() {
   const fetchNotifications = async () => {
     if (!user) return;
     try {
-      const res = await fetch(`${API_URL}/api/notifications`, {
-        headers: { 'x-auth-token': localStorage.getItem('token') || '' }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setNotifications(data);
-        setUnreadCount(data.filter((n: any) => !n.read).length);
+      const [notifRes, announceRes] = await Promise.all([
+        fetch(`${API_URL}/api/notifications`, {
+          headers: { 'x-auth-token': localStorage.getItem('token') || '' }
+        }),
+        fetch(`${API_URL}/api/announcements`, {
+          headers: { 'x-auth-token': localStorage.getItem('token') || '' }
+        })
+      ]);
+
+      let combined: any[] = [];
+
+      if (notifRes.ok) {
+        const data = await notifRes.json();
+        combined = [...combined, ...data];
+      }
+
+      if (announceRes.ok) {
+        const aData = await announceRes.json();
+        // Mark announcements as type 'announcement' and 'read' true to avoid badge count
+        const formattedAnnouncements = aData.map((a: any) => ({
+          ...a,
+          type: 'announcement',
+          read: true,
+          message: a.title + ": " + a.message // Combine title/message for display
+        }));
+        combined = [...combined, ...formattedAnnouncements];
+      }
+
+      // Sort by date descending
+      combined.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      setNotifications(combined);
+
+      // Count only real notifications as unread
+      if (notifRes.ok) {
+        setUnreadCount(combined.filter((n: any) => !n.read).length);
       }
     } catch (error) {
-      console.error("Failed to fetch notifications", error);
+      console.error("Failed to fetch notifications/announcements", error);
     }
   };
 
@@ -227,7 +256,10 @@ export function Header() {
                     <div className="divide-y">
                       {notifications.map((notification) => (
                         <div key={notification._id} className={`p-4 text-sm ${notification.read ? 'bg-background' : 'bg-muted/50'}`}>
-                          <p>{notification.message}</p>
+                          <p>
+                            {notification.type === 'announcement' && <span className="font-bold text-primary block mb-1">📢 Announcement</span>}
+                            {notification.message}
+                          </p>
                           <p className="text-xs text-muted-foreground mt-1">
                             {new Date(notification.createdAt).toLocaleDateString()}
                           </p>
