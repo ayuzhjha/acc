@@ -44,33 +44,14 @@ const sendOTPEmail = async (email, otp) => {
     }
 };
 
-// Register
+// Register (Direct login — OTP verification removed)
 router.post('/register', async (req, res) => {
-    let user;
-    let otp;
     try {
         const { name, email, password, gender, age, isAcmMember, acmId, collegeName, graduationYear } = req.body;
 
         // Check if user exists
-        user = await User.findOne({ email });
-        if (user) {
-            // If user exists but not verified, maybe resend OTP?
-            // For now, standard "User already exists"
-            if (!user.isVerified) {
-                // Generate new OTP and resend
-                otp = Math.floor(100000 + Math.random() * 900000).toString();
-                user.otp = otp;
-                user.otpExpires = Date.now() + 10 * 60 * 1000; // 10 mins
-
-                // Update fields if they changed? 
-                // Optionally update password/details here if you want to support re-registration of unverified
-                user.name = name;
-                user.password = await bcrypt.hash(password, await bcrypt.genSalt(10));
-
-                await user.save();
-                await sendOTPEmail(email, otp);
-                return res.json({ message: 'User already registered but not verified. New OTP sent.', email, needsVerification: true });
-            }
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
             return res.status(400).json({ message: 'User already exists' });
         }
 
@@ -78,12 +59,8 @@ router.post('/register', async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Generate OTP
-        otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const otpExpires = Date.now() + 10 * 60 * 1000; // 10 mins
-
-        // Create user
-        user = new User({
+        // Create user (verified by default, no OTP)
+        const user = new User({
             name,
             email,
             password: hashedPassword,
@@ -93,35 +70,38 @@ router.post('/register', async (req, res) => {
             acmId: isAcmMember ? acmId : undefined,
             collegeName,
             graduationYear,
-            otp,
-            otpExpires,
-            isVerified: false
+            isVerified: true
         });
 
         await user.save();
 
-        // Send OTP
-        await sendOTPEmail(email, otp);
+        // Create JWT and login directly
+        const payload = {
+            user: {
+                id: user.id,
+                role: user.role
+            }
+        };
 
-        res.json({ message: 'Registration successful. Please verify your email.', email, needsVerification: true });
+        jwt.sign(
+            payload,
+            process.env.JWT_SECRET || 'secret',
+            { expiresIn: '1d' },
+            (err, token) => {
+                if (err) throw err;
+                res.json({
+                    token,
+                    user: { id: user.id, name: user.name, email: user.email, role: user.role },
+                    message: 'Account created successfully'
+                });
+            }
+        );
 
     } catch (err) {
         console.error("Registration error:", err.message);
         if (err.name === 'ValidationError') {
             return res.status(400).json({ message: err.message });
         }
-        // If email fails, still allow registration for dev/testing
-        if (err.code === 'EAUTH' || err.message.includes('Missing credentials')) {
-            console.log("Email credentials missing/invalid. OTP was:", otp);
-            return res.json({
-                message: 'Registration successful but email failed to send.',
-                email: req.body.email,
-                needsVerification: true,
-                emailError: err.message, // Send specific error to frontend
-                devOtp: otp
-            });
-        }
-
         res.status(500).json({ message: 'Server error: ' + err.message });
     }
 });
